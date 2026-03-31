@@ -1,0 +1,20 @@
+{
+  "persons": [
+    {
+      "name": "nameddd",
+      "number": "193809383",
+      "id": "NlAt-nIbcs4"
+    },
+    {
+      "name": "sdfasfa",
+      "number": "1213234142",
+      "id": "pU7PoatnBqU"
+    },
+    {
+      "name": "但是开始开发",
+      "number": "213213",
+      "id": "bgRURC2YBSU"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
