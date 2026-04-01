@@ -1,0 +1,30 @@
+{
+  "persons": [
+    {
+      "name": "ahy",
+      "number": "123",
+      "id": "dz6my1dWNEc"
+    },
+    {
+      "name": "ddddd",
+      "number": "sdsfdaf",
+      "id": "H2X8c6TUYUs"
+    },
+    {
+      "name": "dasfd",
+      "number": "11112232313",
+      "id": "FhsmbDoyt_8"
+    },
+    {
+      "name": "ahy22",
+      "number": "2312313131",
+      "id": "uxMoKqfRVIE"
+    },
+    {
+      "name": "dsdf",
+      "number": "21312132131",
+      "id": "LC-c1ux_ffU"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

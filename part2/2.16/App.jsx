@@ -55,7 +55,6 @@ const App = () => {
   const [newPerson, setNewPerson] = useState({'name':'','number':''})
   const [searchTerm,setSearchTerm] = useState('')
   const [successMessage, setSuccessMessage] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     personService
@@ -91,10 +90,6 @@ const App = () => {
             setSuccessMessage(null)
           }, 5000)
         })
-        .catch(error => {
-          setErrorMessage(`Information of ${person.name} has already been removed from server`)
-          setTimeout(() => setErrorMessage(null), 5000)
-        })
       return
     }
 
@@ -112,10 +107,6 @@ const App = () => {
             setTimeout(() => {
               setSuccessMessage(null)
             }, 5000)
-          })
-          .catch(error => {
-            setErrorMessage(`Information of ${person.name} has already been removed from server`)
-            setTimeout(() => setErrorMessage(null), 5000)
           })
   }
 
@@ -155,7 +146,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={successMessage} type={true}/>
+      <Notification message={successMessage} />
       <div>
         <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange}/>
       </div>

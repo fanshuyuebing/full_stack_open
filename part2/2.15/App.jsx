@@ -83,6 +83,7 @@ const App = () => {
         .update(person.id, changedPerson)
         .then(returnPerson =>{
           setPersons(persons.map(n => n.id === person.id ? returnPerson : n))
+          setNewPerson({name: '', number: ''})
         })
       return
     }
@@ -98,6 +99,21 @@ const App = () => {
             setPersons(persons.concat(returnedPerson))
             setNewPerson({name: '', number: ''})
           })
+  }
+
+  const deletePersonOf = (id, name) => {
+    if (!window.confirm(`Delete ${name}?`)) {
+      return
+    }
+
+    personService
+      .deletePerson(id)
+      .then(() => {
+        setPersons(persons.filter(n => n.id !== id))
+      })
+      .catch(error => {
+        alert('Delete failed:', error)
+      })
   }
 
   const handleNameChange = (event) => {
@@ -117,21 +133,6 @@ const App = () => {
     : persons.filter(person => 
         person.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-  
-  const deletePersonOf = (id, name) => {
-    if (!window.confirm(`Delete ${name}?`)) {
-      return
-    }
-
-    personService
-      .deletePerson(id)
-      .then(() => {
-        setPersons(persons.filter(n => n.id !== id))
-      })
-      .catch(error => {
-        alert('Delete failed:', error)
-      })
-  }
 
   return (
     <div>
