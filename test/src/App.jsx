@@ -1,174 +1,146 @@
 import { useState, useEffect } from 'react'
-import personService from './services/persons'
-import Notification from './components/Notification'
+import axios from 'axios'
 
+const api_key = import.meta.env.VITE_SOME_KEY
 
-const Filter = ({ searchTerm, handleSearchChange }) => {
+const Weather = ({ capital }) => {
+  console.log('api key:', import.meta.env.VITE_SOME_KEY)
+  const [weather, setWeather] = useState(null)
+
+  useEffect(() => {
+    if (!capital) {
+      return
+    }
+
+    axios
+      .get('https://api.openweathermap.org/data/2.5/weather', {
+        params: {
+          q: capital,
+          appid: api_key,
+          units: 'metric'
+        }
+      })
+      .then(response => {
+        setWeather(response.data)
+      })
+      .catch(error => {
+        console.log('获取天气失败', error)
+      })
+  }, [capital])
+
+  if (!weather) {
+    return <div>正在加载天气中...</div>
+  }
+
+  const icon = weather.weather[0].icon
+  const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`
+
   return (
     <div>
-      filter shown with <input value={searchTerm} onChange={handleSearchChange}/>
+      <h3>Weather in {capital}</h3>
+      <div>temperature {weather.main.temp} Celsius</div>
+      <img src={iconUrl} alt={weather.weather[0].description} />
+      <div>wind {weather.wind.speed} m/s</div>
     </div>
   )
 }
 
-const PersonForm = ({ 
-  newPerson, 
-  handleNameChange, 
-  handleNumberChange, 
-  addPerson 
-}) => {
+const Filter = ({ searchTerm, handleSearchChange }) => (
+    <div>
+      find countries <input value={searchTerm} onChange={handleSearchChange} />
+    </div>
+)
+
+const Country = ({ country }) => {
+  const languages = Object.values(country.languages)
+  const capital = country.capital ? country.capital[0] : ''
+
   return (
-    <form onSubmit={addPerson}>
-      <div>
-        name: <input value={newPerson.name} onChange={handleNameChange}/>
-      </div>
-      <div>
-        number: <input value={newPerson.number} onChange={handleNumberChange}/>
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
+    <div>
+      <h2>{country.name.common}</h2>
+      <div>capital {country.capital ? country.capital[0] : 'unknown'}</div>
+      <div>area {country.area}</div>
+
+      <h3>languages:</h3>
+      <ul>
+        {languages.map(language => (
+          <li key={language}>{language}</li>
+        ))}
+      </ul>
+
+      <img
+        src={country.flags.png}
+        alt={`flag of ${country.name.common}`}
+        width="150"
+      />
+
+      {capital && <Weather capital={capital}/>}
+    </div>
   )
 }
 
-const Person = ({ person,deletePerson }) => {
-  return <div>
-    <p>{person.name} {person.number} <button onClick={deletePerson}>delete</button></p>
-    
-  </div>
-}
-
-const Persons = ({ personsToShow, deletePerson }) => {
+const Countries = ({ countriesToShow, handleShowCountry }) => {
   return (
     <div>
-      {personsToShow.map((person) => (
-        <Person key={person.id} person={person} deletePerson={() => deletePerson(person.id, person.name)} />
+      {countriesToShow.map(country => (
+        <div key={country.cca3}>
+          {country.name.common}
+          <button onClick={() => handleShowCountry(country.name.common)}>
+            show
+          </button>
+        </div>
       ))}
     </div>
   )
 }
 
-
 const App = () => {
-  const [persons, setPersons] = useState([])
-  const [newPerson, setNewPerson] = useState({'name':'','number':''})
-  const [searchTerm,setSearchTerm] = useState('')
-  const [successMessage, setSuccessMessage] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [countries, setCountries] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    personService
-      .getAll()
-      .then(initialPersons => {
-        setPersons(initialPersons)
+    axios
+      .get('https://studies.cs.helsinki.fi/restcountries/api/all')
+      .then(response => {
+        setCountries(response.data)
       })
   }, [])
-
-
-  const addPerson = (event) => {
-    event.preventDefault()
-    const nameExists = persons.some(person => person.name === newPerson.name)
-
-    
-    if(nameExists){
-      if (!window.confirm(`${newPerson.name} 
-          is already added to phonebook, 
-          replace the old number with new one?`)) {
-        return
-      }
-
-      const person = persons.find(n => n.name === newPerson.name)
-      const changedPerson = {...person, number: newPerson.number}
-
-      personService
-        .update(person.id, changedPerson)
-        .then(returnPerson =>{
-          setPersons(persons.map(n => n.id === person.id ? returnPerson : n))
-          setNewPerson({name: '', number: ''})
-          setSuccessMessage(`Added ${person.name}`)
-          setTimeout(() => {
-            setSuccessMessage(null)
-          }, 5000)
-        })
-        .catch(error => {
-          setErrorMessage(`Information of ${person.name} has already been removed from server`)
-          setTimeout(() => setErrorMessage(null), 5000)
-        })
-      return
-    }
-
-    const nameObject = {
-      name: newPerson.name,
-      number: newPerson.number
-    }
-
-    personService
-          .create(nameObject)
-          .then(returnedPerson => {
-            setPersons(persons.concat(returnedPerson))
-            setNewPerson({name: '', number: ''})
-            setSuccessMessage(`Added ${returnedPerson.name}`)
-            setTimeout(() => {
-              setSuccessMessage(null)
-            }, 5000)
-          })
-          .catch(error => {
-            setErrorMessage(`Information of ${person.name} has already been removed from server`)
-            setTimeout(() => setErrorMessage(null), 5000)
-          })
-  }
-
-  const deletePersonOf = (id, name) => {
-    if (!window.confirm(`Delete ${name}?`)) {
-      return
-    }
-
-    personService
-      .deletePerson(id)
-      .then(() => {
-        setPersons(persons.filter(n => n.id !== id))
-      })
-      .catch(error => {
-        alert('Delete failed:', error)
-      })
-  }
-
-  const handleNameChange = (event) => {
-    setNewPerson({...newPerson, name: event.target.value})
-  }
-  
-  const handleNumberChange = (event) => {
-    setNewPerson({...newPerson, number: event.target.value})
-  }
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value)
   }
 
-  const personToShow = searchTerm === ''
-    ? persons
-    : persons.filter(person => 
-        person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleShowCountry = (countryName) => {
+    setSearchTerm(countryName)
+  }
+
+  const countriesToShow = searchTerm === ''
+    ? []
+    : countries.filter(country =>
+        country.name.common.toLowerCase().includes(searchTerm.toLowerCase())
       )
 
   return (
     <div>
-      <h2>Phonebook</h2>
-      <Notification message={successMessage} type={true}/>
-      <div>
-        <Filter searchTerm={searchTerm} handleSearchChange={handleSearchChange}/>
-      </div>
-      <h2>add a new</h2>
-      <PersonForm 
-        newPerson={newPerson}
-        handleNameChange={handleNameChange}
-        handleNumberChange={handleNumberChange}
-        addPerson={addPerson}
+      <Filter
+        searchTerm={searchTerm}
+        handleSearchChange={handleSearchChange}
       />
 
-      <h2>Numbers</h2>
-      <Persons personsToShow={personToShow} deletePerson={deletePersonOf}/>
+      {countriesToShow.length > 10 && (
+        <div>Too many matches, specify another filter</div>
+      )}
+
+      {countriesToShow.length <= 10 && countriesToShow.length > 1 && (
+        <Countries
+          countriesToShow={countriesToShow}
+          handleShowCountry={handleShowCountry}
+        />
+      )}
+
+      {countriesToShow.length === 1 && (
+        <Country country={countriesToShow[0]} />
+      )}
     </div>
   )
 }
