@@ -1,14 +1,23 @@
+require('dotenv').config()
+
 const express = require('express')
+const cors = require('cors')
 const morgan = require('morgan')
+const Person = require('./models/person')
+
 const app = express()
 
+// 1. 常规中间件
+app.use(cors())
 app.use(express.json())
 app.use(express.static('dist'))
 
+// 2. 日志中间件
 morgan.token('post-data', (request) => {
   if (request.method === 'POST') {
     return JSON.stringify(request.body)
   }
+
   return ''
 })
 
@@ -16,100 +25,120 @@ app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :post-data')
 )
 
-
-let persons = [
-    { 
-      "id": "1",
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": "2",
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": "3",
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": "4",
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
-
-app.get('/api/persons', (request, response) => {
-  response.json(persons)
+// 3. 路由
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then(persons => {
+      response.json(persons)
+    })
+    .catch(error => next(error))
 })
 
-
-app.get('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-  const person = persons.find(person => person.id === id)
-  
-
-  if (person) {
-    response.json(person)
-  } else {
-    response.status(404).end()
-  }
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id',(request,response) => {
-  const id = request.params.id
-  persons = persons.filter(person => person.id !== id)
-
-  response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(() => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const { name, number } = request.body
 
-  if(!name){
+  if (!name) {
     return response.status(400).json({
-      error: 'name is missing'
+      error: 'name is missing',
     })
   }
 
-  if(!number){
+  if (!number) {
     return response.status(400).json({
-      error: 'number is missing'
+      error: 'number is missing',
     })
   }
 
-  const nameExists = persons.some(person => person.name === name)
-
-  if(nameExists){
-    return response.status(400).json({
-      error: 'name must be unique'
-    })
-  }
-
-  const newPerson = {
-    id: String(Math.floor(Math.random() * 1000000)),
+  const person = new Person({
     name,
-    number
+    number,
+  })
+
+  person
+    .save()
+    .then(savedPerson => {
+      response.json(savedPerson)
+    })
+    .catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body
+
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (!person) {
+        return response.status(404).end()
+      }
+
+      person.name = name
+      person.number = number
+
+      return person.save().then((updatedPerson) => {
+        response.json(updatedPerson)
+      })
+    })
+    .catch((error) => next(error))
+})
+
+app.get('/info', (request, response, next) => {
+  Person.countDocuments({})
+    .then(count => {
+      const requestTime = new Date()
+
+      response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${requestTime}</p>
+      `)
+    })
+    .catch(error => next(error))
+})
+
+// 4. 未知接口处理中间件
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({
+    error: 'unknown endpoint',
+  })
+}
+
+app.use(unknownEndpoint)
+
+// 5. 错误处理中间件，必须放在最后
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({
+      error: 'malformatted id',
+    })
   }
+  next(error)
+}
 
-  persons = persons.concat(newPerson)
+app.use(errorHandler)
 
-  response.json(newPerson)
-})
+const PORT = process.env.PORT || 3001
 
-
-app.get('/info', (request, response) => {
-  const requestTime = new Date()
-  const peopleCount = persons.length
-
-  response.send(`
-    <p>Phonebook has info for ${peopleCount} people</p>
-    <p>${requestTime}</p>
-  `)
-})
-
-const PORT = 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
