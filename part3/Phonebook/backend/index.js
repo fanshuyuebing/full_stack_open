@@ -1,4 +1,4 @@
-require('dotenv').config()
+﻿require('dotenv').config()
 
 const express = require('express')
 const cors = require('cors')
@@ -7,12 +7,10 @@ const Person = require('./models/person')
 
 const app = express()
 
-// 1. 常规中间件
 app.use(cors())
 app.use(express.json())
 app.use(express.static('dist'))
 
-// 2. 日志中间件
 morgan.token('post-data', (request) => {
   if (request.method === 'POST') {
     return JSON.stringify(request.body)
@@ -25,7 +23,6 @@ app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :post-data')
 )
 
-// 3. 路由
 app.get('/api/persons', (request, response, next) => {
   Person.find({})
     .then(persons => {
@@ -56,18 +53,6 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 app.post('/api/persons', (request, response, next) => {
   const { name, number } = request.body
-
-  if (!name) {
-    return response.status(400).json({
-      error: 'name is missing',
-    })
-  }
-
-  if (!number) {
-    return response.status(400).json({
-      error: 'number is missing',
-    })
-  }
 
   const person = new Person({
     name,
@@ -114,7 +99,6 @@ app.get('/info', (request, response, next) => {
     .catch(error => next(error))
 })
 
-// 4. 未知接口处理中间件
 const unknownEndpoint = (request, response) => {
   response.status(404).send({
     error: 'unknown endpoint',
@@ -123,13 +107,17 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-// 5. 错误处理中间件，必须放在最后
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError') {
     return response.status(400).send({
       error: 'malformatted id',
+    })
+  }
+  else if (error.name === 'ValidationError') {
+    return response.status(400).json({
+      error: error.message,
     })
   }
   next(error)
