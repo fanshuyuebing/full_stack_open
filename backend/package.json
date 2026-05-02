@@ -1,30 +1,25 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
+  "name": "notebackend",
+  "version": "0.0.1",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build:ui": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Matti Luukkainen",
+  "license": "MIT",
+  "description": "",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mongodb": "^7.2.0",
-    "mongoose": "^9.6.0"
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mongoose": "^8.11.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@stylistic/eslint-plugin": "^5.10.0",
-    "eslint": "^9.39.4",
-    "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.5.0"
+    "@eslint/js": "^9.22.0",
+    "@stylistic/eslint-plugin-js": "^4.2.0",
+    "eslint": "^9.22.0",
+    "globals": "^16.0.0"
   }
 }
