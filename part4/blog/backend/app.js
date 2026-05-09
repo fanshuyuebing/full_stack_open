@@ -4,9 +4,8 @@ dns.setServers(['10.250.243.10'])
 const express = require('express')
 const mongoose = require('mongoose')
 const config = require('./utils/config')
+const blogRouter = require('./controllers/blog')
 const logger = require('./utils/logger')
-const notesRouter = require('./controllers/notes')
-const middleware = require('./utils/middleware')
 
 const app = express()
 
@@ -21,13 +20,9 @@ mongoose
     logger.error('error connection to MongoDB:', error.message)
   })
 
-app.use(express.static('dist'))
+// app.use(express.static('dist'))
 app.use(express.json())
-app.use(middleware.requestLogger)
 
-app.use('/api/notes', notesRouter)
-
-app.use(middleware.unknownEndpoint)
-app.use(middleware.errorHandler)
+app.use('/api/blogs', blogRouter)
 
 module.exports = app
