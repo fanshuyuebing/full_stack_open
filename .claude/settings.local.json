@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(set NODE_ENV=test)",
+      "Bash(node --test tests/blog_api.test.js)",
+      "Bash(npm test *)"
+    ]
+  }
+}
