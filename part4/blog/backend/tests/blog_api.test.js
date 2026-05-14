@@ -105,11 +105,7 @@ describe('when there is initially some blogs saved', () => {
         url: 'https://example.com/no-title',
       }
 
-      await api
-        .post('/api/blogs')
-        .set('Authorization', 'Bearer ' + token)
-        .send(newBlog)
-        .expect(400)
+      await api.post('/api/blogs').send(newBlog).expect(400)
     })
 
     test('fails with status code 400 if url is missing', async () => {
@@ -118,33 +114,54 @@ describe('when there is initially some blogs saved', () => {
         author: 'No URL Author',
       }
 
-      await api
-        .post('/api/blogs')
-        .set('Authorization', 'Bearer ' + token)
-        .send(newBlog)
-        .expect(400)
+      await api.post('/api/blogs').send(newBlog).expect(400)
+    })
+
+    test('fails with status code 401 if token is missing', async () => {
+      const newBlog = {
+        title: 'Valid Title',
+        author: 'Author',
+        url: 'https://example.com/valid',
+        likes: 3,
+      }
+
+      await api.post('/api/blogs').send(newBlog).expect(401)
     })
   })
 
   describe('deletion of a blog', () => {
-    test('succeeds with status code 204 if id is valid', async () => {
+    test('succeeds with status code 204 if token matches creator', async () => {
+      const newBlog = {
+        title: 'Blog to delete',
+        author: 'Creator',
+        url: 'https://example.com/delete-me',
+      }
+
+      const response = await api
+        .post('/api/blogs')
+        .set('Authorization', 'Bearer ' + token)
+        .send(newBlog)
+        .expect(201)
+
+      const blogsAtStart = await helper.blogsInDb()
+
+      await api
+        .delete(`/api/blogs/${response.body.id}`)
+        .set('Authorization', 'Bearer ' + token)
+        .expect(204)
+
+      const blogsAtEnd = await helper.blogsInDb()
+      assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
+
+      const ids = blogsAtEnd.map((b) => b.id)
+      assert(!ids.includes(response.body.id))
+    })
+
+    test('fails with status code 401 if token is missing', async () => {
       const blogsAtStart = await helper.blogsInDb()
       const blogToDelete = blogsAtStart[0]
 
-      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
-
-      const blogsAtEnd = await helper.blogsInDb()
-
-      const ids = blogsAtEnd.map((b) => b.id)
-      assert(!ids.includes(blogToDelete.id))
-
-      assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
-    })
-
-    test('fails with status code 400 if id is invalid', async () => {
-      const invalidId = '5a3d5da59070081a82a3445'
-
-      await api.delete(`/api/blogs/${invalidId}`).expect(400)
+      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(401)
     })
   })
 
