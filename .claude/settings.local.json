@@ -10,7 +10,8 @@
       "Bash(curl -s -X POST http://localhost:3001/api/login -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"test\\\\\",\\\\\"password\\\\\":\\\\\"test\\\\\"}\")",
       "Bash(kill %1)",
       "Bash(netstat -ano)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
