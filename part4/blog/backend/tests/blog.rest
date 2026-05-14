@@ -1,0 +1,94 @@
+### create user
+# @name createUser
+POST http://127.0.0.1:3003/api/users
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "name": "Test User",
+    "password": "password123"
+}
+
+###
+
+### get all users
+GET http://127.0.0.1:3003/api/users
+
+###
+
+# @name createBlog
+POST http://127.0.0.1:3003/api/blogs
+Content-Type: application/json
+
+{
+    "title": "Test Blog",
+    "author": "Test Author",
+    "url": "https://example.com/test",
+    "likes": 5
+}
+
+###
+
+### get all blogs
+GET http://127.0.0.1:3003/api/blogs
+
+###
+
+### update blog likes
+PUT http://127.0.0.1:3003/api/blogs/{{createBlog.response.body.id}}
+Content-Type: application/json
+
+{
+    "likes": 99
+}
+
+###
+
+### delete blog
+DELETE http://127.0.0.1:3003/api/blogs/{{createBlog.response.body.id}}
+
+###
+
+### create blog without likes (defaults to 0)
+POST http://127.0.0.1:3003/api/blogs
+Content-Type: application/json
+
+{
+    "title": "No Likes Blog",
+    "author": "Minimal Author",
+    "url": "https://example.com/minimal"
+}
+
+###
+
+### create blog missing title (should 400)
+POST http://127.0.0.1:3003/api/blogs
+Content-Type: application/json
+
+{
+    "author": "Missing Title",
+    "url": "https://example.com/missing-title"
+}
+
+###
+
+### create blog missing url (should 400)
+POST http://127.0.0.1:3003/api/blogs
+Content-Type: application/json
+
+{
+    "title": "Missing URL",
+    "author": "Missing URL Author"
+}
+
+###
+
+### create duplicate user (should 400)
+POST http://127.0.0.1:3003/api/users
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "name": "Duplicate",
+    "password": "other"
+}
