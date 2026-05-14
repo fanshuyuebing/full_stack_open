@@ -1,0 +1,34 @@
+### create user
+# @name createUser
+POST http://127.0.0.1:3001/api/users
+Content-Type: application/json
+
+{
+    "username": "mluukkai",
+    "name": "Matti Luukkainen",
+    "password": "salainen"
+}
+
+###
+
+# @name login
+POST http://127.0.0.1:3001/api/login
+Content-Type: application/json
+
+{
+    "username": "mluukkai",
+    "password": "salainen"
+}
+
+###
+
+# create note with token
+POST http://127.0.0.1:3001/api/notes
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+    "content": "this is a test note from REST client",
+    "important": true,
+    "userId": "{{createUser.response.body.id}}"
+}

@@ -4,7 +4,13 @@
       "Bash(npm install *)",
       "Bash(set NODE_ENV=test)",
       "Bash(node --test tests/blog_api.test.js)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(timeout 8 node index.js)",
+      "Bash(node index.js)",
+      "Bash(curl -s -X POST http://localhost:3001/api/login -H \"Content-Type: application/json\" -d \"{\\\\\"username\\\\\":\\\\\"test\\\\\",\\\\\"password\\\\\":\\\\\"test\\\\\"}\")",
+      "Bash(kill %1)",
+      "Bash(netstat -ano)",
+      "Bash(curl *)"
     ]
   }
 }
