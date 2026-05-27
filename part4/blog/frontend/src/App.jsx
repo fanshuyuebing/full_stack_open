@@ -18,7 +18,7 @@ const App = () => {
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [])
 
   useEffect(() => {
@@ -32,13 +32,12 @@ const App = () => {
 
   const handleLogin = async event => {
     event.preventDefault()
-    
     try {
       const user = await loginService.login({ username, password })
 
       window.localStorage.setItem(
         'loggedNoteappUser', JSON.stringify(user)
-      ) 
+      )
 
       blogService.setToken(user.token)
       setUser(user)
@@ -89,6 +88,21 @@ const App = () => {
     setBlogs(blogs.map(b => b.id !== blog.id ? b : returnedBlog))
   }
 
+  const handleDelete = async (blog) => {
+    if (!window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
+      return
+    }
+
+    try {
+      await blogService.remove(blog.id)
+      setBlogs(blogs.filter(b => b.id !== blog.id))
+    } catch {
+      setErrorMessage('failed to delete blog')
+      setNotificationType('error')
+      setTimeout(() => setErrorMessage(null), 5000)
+    }
+  }
+
   if (user === null) {
     return (
       <div>
@@ -116,8 +130,8 @@ const App = () => {
       <Togglable buttonLabel="create new blog">
         <BlogForm createBlog={createBlog} />
       </Togglable>
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} handleLike={() => handleLike(blog)} />
+      {[...blogs].sort((a, b) => b.likes - a.likes).map(blog =>
+        <Blog key={blog.id} blog={blog} user={user} handleLike={() => handleLike(blog)} handleDelete={() => handleDelete(blog)} />
       )}
     </div>
   )
