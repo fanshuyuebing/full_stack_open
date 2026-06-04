@@ -13,7 +13,10 @@
       "Bash(curl *)",
       "Bash(node -e ' *)",
       "Bash(npx vitest *)",
-      "Bash(node addUser.js)"
+      "Bash(node addUser.js)",
+      "Bash(mkdir -p d:/agentscope/full_stack_open/part4/e2e)",
+      "Bash(npm init *)",
+      "Bash(npx playwright *)"
     ]
   }
 }

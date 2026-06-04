@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
+import NavBar from './components/NavBar'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import LoginForm from './components/LoginForm'
+import SingleBlog from './components/SingleBlog'
 import Togglable from './components/Togglable'
 
-const App = () => {
+const AppContent = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [notificationType, setNotificationType] = useState('error')
   const [errorMessage, setErrorMessage] = useState(null)
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -43,6 +48,7 @@ const App = () => {
       setUser(user)
       setUsername('')
       setPassword('')
+      navigate('/')
     } catch {
       setErrorMessage('wrong credentials')
       setNotificationType('error')
@@ -59,6 +65,7 @@ const App = () => {
     setUser(null)
     setUsername('')
     setPassword('')
+    navigate('/')
   }
 
   const createBlog = async (blogObject) => {
@@ -68,6 +75,7 @@ const App = () => {
       setErrorMessage(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
       setNotificationType('success')
       setTimeout(() => setErrorMessage(null), 5000)
+      navigate('/')
     } catch {
       setErrorMessage('failed to create blog')
       setNotificationType('error')
@@ -103,37 +111,56 @@ const App = () => {
     }
   }
 
-  if (user === null) {
-    return (
-      <div>
-        <h2>Log in to application</h2>
-        <Notification message={errorMessage} type="error" />
-        <LoginForm
-          handleLogin={handleLogin}
-          username={username}
-          password={password}
-          setUsername={setUsername}
-          setPassword={setPassword}
-        />
-      </div>
-    )
-  }
-
   return (
     <div>
-      <h2>blogs</h2>
+      <NavBar user={user} handleLogout={handleLogout} />
       <Notification message={errorMessage} type={notificationType} />
-      <p>
-        {user.name} logged in
-        <button onClick={handleLogout}>logout</button>
-      </p>
-      <Togglable buttonLabel="create new blog">
-        <BlogForm createBlog={createBlog} />
-      </Togglable>
-      {[...blogs].sort((a, b) => b.likes - a.likes).map(blog =>
-        <Blog key={blog.id} blog={blog} user={user} handleLike={() => handleLike(blog)} handleDelete={() => handleDelete(blog)} />
-      )}
+
+      <Routes>
+        <Route path="/" element={
+          <div>
+            <h2>blogs</h2>
+            {[...blogs].sort((a, b) => b.likes - a.likes).map(blog =>
+              <Blog key={blog.id} blog={blog} user={user} handleLike={() => handleLike(blog)} handleDelete={() => handleDelete(blog)} />
+            )}
+          </div>
+        } />
+        <Route path="/create" element={
+          user
+            ? (
+              <div>
+                <BlogForm createBlog={createBlog} />
+              </div>
+              )
+            : <Navigate to="/login" replace />
+        } />
+        <Route path="/blogs/:id" element={<SingleBlog blogs={blogs} setBlogs={setBlogs} user={user} />} />
+        <Route path="/login" element={
+          user
+            ? <Navigate to="/" replace />
+            : (
+              <div>
+                <h2>Log in to application</h2>
+                <LoginForm
+                  handleLogin={handleLogin}
+                  username={username}
+                  password={password}
+                  setUsername={setUsername}
+                  setPassword={setPassword}
+                />
+              </div>
+              )
+        } />
+      </Routes>
     </div>
+  )
+}
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   )
 }
 

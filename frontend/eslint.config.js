@@ -27,7 +27,6 @@ export default [
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true }
-
       ],
       indent: ['error', 2],
       'linebreak-style': ['error', 'unix'],

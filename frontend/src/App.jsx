@@ -1,22 +1,22 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import noteService from './services/notes'
+
+import {
+  Routes, Route, Link, useMatch
+} from 'react-router-dom'
+
+import { Container, AppBar, Toolbar, Button } from '@mui/material'
+
+import NoteList from './components/NoteList'
+import Home from './components/Home'
 import Footer from './components/Footer'
+import NoteForm from './components/NoteForm'
 import Note from './components/Note'
 import Notification from './components/Notification'
-import LoginForm from './components/LoginForm'
-import NoteForm from './components/NoteForm'
-import Togglable from './components/Togglable'
-import loginService from './services/login'
-import noteService from './services/notes'
 
 const App = () => {
   const [notes, setNotes] = useState([])
-  const [showAll, setShowAll] = useState(true)
-  const [errorMessage, setErrorMessage] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
-
-  const noteFormRef = useRef()
+  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     noteService.getAll().then(initialNotes => {
@@ -28,15 +28,23 @@ const App = () => {
     const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
       noteService.setToken(user.token)
     }
   }, [])
 
   const addNote = noteObject => {
-    noteFormRef.current.toggleVisibility()
     noteService.create(noteObject).then(returnedNote => {
       setNotes(notes.concat(returnedNote))
+      setNotification({ text: `Note '${returnedNote.content}' added!`, type: 'success' })
+      setTimeout(() => {
+        setNotification(null)
+      }, 10000)
+    })
+  }
+
+  const deleteNote = (id) => {
+    noteService.remove(id).then(() => {
+      setNotes(notes.filter(n => n.id !== id))
     })
   }
 
@@ -50,81 +58,58 @@ const App = () => {
         setNotes(notes.map(note => (note.id !== id ? note : returnedNote)))
       })
       .catch(() => {
-        setErrorMessage(
-          `Note '${note.content}' was already removed from server`
+        setNotification(
+          { text: `Note '${note.content}' was already removed from server`, type: 'error' }
         )
         setTimeout(() => {
-          setErrorMessage(null)
+          setNotification(null)
         }, 5000)
+
         setNotes(notes.filter(n => n.id !== id))
       })
   }
 
-  const handleLogin = async event => {
-    event.preventDefault()
+  const match = useMatch('/notes/:id')
 
-    try {
-      const user = await loginService.login({ username, password })
+  const note = match
+    ? notes.find(note => note.id === match.params.id)
+    : null
 
-      window.localStorage.setItem('loggedNoteappUser', JSON.stringify(user))
-      noteService.setToken(user.token)
-      setUser(user)
-      setUsername('')
-      setPassword('')
-    } catch {
-      setErrorMessage('wrong credentials')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
-    }
-  }
+  console.log(note)
 
-  const notesToShow = showAll ? notes : notes.filter(note => note.important)
-
-  const loginForm = () => (
-    <Togglable buttonLabel="login">
-      <LoginForm
-        username={username}
-        password={password}
-        handleUsernameChange={({ target }) => setUsername(target.value)}
-        handlePasswordChange={({ target }) => setPassword(target.value)}
-        handleSubmit={handleLogin}
-      />
-    </Togglable>
-  )
+  const hoverStyle = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
 
   return (
-    <div>
-      <h1>Notes</h1>
-      <Notification message={errorMessage} />
+    <Container>
+      <AppBar position="static">
+        <Toolbar>
+          <Button color="inherit" component={Link} to="/" sx={hoverStyle}>home</Button>
+          <Button color="inherit" component={Link} to="/notes" sx={hoverStyle}>notes</Button>
+          <Button color="inherit" component={Link} to="/create" sx={hoverStyle}>new note</Button>
+        </Toolbar>
+      </AppBar>
 
-      {!user && loginForm()}
-      {user && (
-        <div>
-          <p>{user.name} logged in</p>
-          <Togglable buttonLabel="new note" ref={noteFormRef}>
-            <NoteForm createNote={addNote} />
-          </Togglable>
-        </div>
-      )}
+      <Notification notification={notification} />
 
-      <div>
-        <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? 'important' : 'all'}
-        </button>
-      </div>
-      <ul>
-        {notesToShow.map(note => (
+      <Routes>
+        <Route path="/notes/:id" element={
           <Note
-            key={note.id}
             note={note}
-            toggleImportance={() => toggleImportanceOf(note.id)}
+            toggleImportanceOf={toggleImportanceOf}
+            deleteNote={deleteNote}
           />
-        ))}
-      </ul>
+        } />
+        <Route path="/notes" element={
+          <NoteList notes={notes} setNotification={setNotification} />
+        } />
+        <Route path="/create" element={
+          <NoteForm createNote={addNote} />
+        } />
+        <Route path="/" element={<Home />} />
+      </Routes>
 
       <Footer />
-    </div>
+    </Container>
   )
 }
 

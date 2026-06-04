@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { TextField, Button, Box, Typography } from '@mui/material'
 
 const BlogForm = ({ createBlog }) => {
   const [title, setTitle] = useState('')
@@ -14,25 +15,30 @@ const BlogForm = ({ createBlog }) => {
   }
 
   return (
-    <div>
-      <h2>Create new</h2>
-
-      <form onSubmit={addBlog}>
-        <div>
-          title
-          <input placeholder="title" value={title} onChange={({ target }) => setTitle(target.value)} />
-        </div>
-        <div>
-          author
-          <input placeholder="author" value={author} onChange={({ target }) => setAuthor(target.value)} />
-        </div>
-        <div>
-          url
-          <input placeholder="url" value={url} onChange={({ target }) => setUrl(target.value)} />
-        </div>
-        <button type="submit">create</button>
-      </form>
-    </div>
+    <Box component="form" onSubmit={addBlog} sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}>
+      <Typography variant="h5">Create new</Typography>
+      <TextField
+        label="title"
+        placeholder="title"
+        value={title}
+        onChange={({ target }) => setTitle(target.value)}
+      />
+      <TextField
+        label="author"
+        placeholder="author"
+        value={author}
+        onChange={({ target }) => setAuthor(target.value)}
+      />
+      <TextField
+        label="url"
+        placeholder="url"
+        value={url}
+        onChange={({ target }) => setUrl(target.value)}
+      />
+      <Button type="submit" variant="contained" sx={{ alignSelf: 'flex-start' }}>
+        create
+      </Button>
+    </Box>
   )
 }
 
