@@ -3,10 +3,10 @@ import { useAnecdoteActions } from '../store'
 const AnecdoteForm = () => {
   const { create } = useAnecdoteActions()
 
-  const addAnecdote = (event) => {
+  const addAnecdote = async (event) => {
     event.preventDefault()
     const content = event.target.note.value
-    create(content)
+    await create(content)
     event.target.reset()
   }
 
