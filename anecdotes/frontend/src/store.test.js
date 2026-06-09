@@ -34,4 +34,32 @@ describe('useAnecdoteStore', () => {
       { content: 'Mock anecdote 1', id: '1', votes: 1 },
     ])
   })
+
+  it('should increase votes when voting for an anecdote', async () => {
+    useAnecdoteStore.setState({
+      anecdotes: [
+        { content: 'First', id: '1', votes: 5 },
+        { content: 'Second', id: '2', votes: 3 },
+      ],
+    })
+
+    vi.mocked(anecdoteService.update).mockResolvedValue({
+      content: 'Second',
+      id: '2',
+      votes: 4,
+    })
+
+    await useAnecdoteStore.getState().actions.vote('2')
+
+    expect(anecdoteService.update).toHaveBeenCalledWith('2', {
+      content: 'Second',
+      id: '2',
+      votes: 4,
+    })
+
+    const anecdotes = useAnecdoteStore.getState().anecdotes
+    expect(anecdotes).toHaveLength(2)
+    const second = anecdotes.find((a) => a.id === '2')
+    expect(second.votes).toBe(4)
+  })
 })

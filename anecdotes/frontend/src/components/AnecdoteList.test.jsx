@@ -32,4 +32,22 @@ describe('AnecdoteList', () => {
     expect(contentElements[0]).toContainHTML('High votes')
     expect(contentElements[1]).toContainHTML('Low votes')
   })
+
+  it('should display only anecdotes matching the filter', () => {
+    useAnecdoteStore.setState({
+      anecdotes: [
+        { content: 'React is fun', id: '1', votes: 3 },
+        { content: 'Redux is powerful', id: '2', votes: 5 },
+        { content: 'Vue is easy', id: '3', votes: 1 },
+      ],
+      filter: 'react',
+    })
+
+    render(<AnecdoteList />)
+
+    const matchingElements = screen.queryAllByText('React is fun')
+    expect(matchingElements.length).toBeGreaterThan(0)
+    expect(screen.queryByText('Redux is powerful')).toBeNull()
+    expect(screen.queryByText('Vue is easy')).toBeNull()
+  })
 })
