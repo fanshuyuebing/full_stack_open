@@ -1,33 +1,19 @@
 import { useState } from 'react'
 import { gql } from '@apollo/client'
 import { useMutation } from '@apollo/client/react'
+import { CREATE_PERSON, ALL_PERSONS } from '../queries'
 
-const CREATE_PERSON = gql`
-  mutation createPerson(
-    $name: String!
-    $street: String!
-    $city: String!
-    $phone: String
-  ) {
-    addPerson(name: $name, street: $street, city: $city, phone: $phone) {
-      name
-      phone
-      id
-      address {
-        street
-        city
-      }
-    }
-  }
-`
 
-const PersonForm = () => {
+const PersonForm = ({ setError }) => {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [street, setStreet] = useState('')
   const [city, setCity] = useState('')
 
-  const [createPerson] = useMutation(CREATE_PERSON)
+  const [ createPerson ] = useMutation(CREATE_PERSON, {
+    refetchQueries: [  {query: ALL_PERSONS } ],
+    onError: (error) => setError(error.message),
+  })
 
   const submit = (event) => {
     event.preventDefault()
