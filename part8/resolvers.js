@@ -1,5 +1,11 @@
 const { GraphQLError } = require('graphql')
+const jwt = require('jsonwebtoken')
+const { PubSub } = require('graphql-subscriptions')
+
 const Person = require('./models/person')
+const User = require('./models/user')
+
+const pubsub = new PubSub()
 
 const resolvers = {
   Query: {
@@ -12,6 +18,9 @@ const resolvers = {
       return Person.find({ phone: { $exists: args.phone === 'YES' } })
     },
     findPerson: async (root, args) => Person.findOne({ name: args.name }),
+    me: (root, args, context) => {
+      return context.currentUser
+    },
   },
   Person: {
     address: ({ street, city }) => {
@@ -20,18 +29,28 @@ const resolvers = {
         city,
       }
     },
+    friendOf: async (root) => {
+      const friends = await User.find({
+        friends: {
+          $in: [root._id]
+        } 
+      })
+
+      return friends
+    }
   },
   Mutation: {
     addPerson: async (root, args, context) => {
       const currentUser = context.currentUser
-  
+
       if (!currentUser) {
         throw new GraphQLError('not authenticated', {
           extensions: {
             code: 'UNAUTHENTICATED',
-          }
+          },
         })
       }
+
       const nameExists = await Person.exists({ name: args.name })
 
       if (nameExists) {
@@ -58,6 +77,8 @@ const resolvers = {
           },
         })
       }
+
+      pubsub.publish('PERSON_ADDED', { personAdded: person })
 
       return person
     },
@@ -87,26 +108,25 @@ const resolvers = {
     createUser: async (root, args) => {
       const user = new User({ username: args.username })
 
-      return user.save()
-        .catch(error => {
-          throw new GraphQLError(`Creating the user failed: ${error.message}`, {
-            extensions: {
-              code: 'BAD_USER_INPUT',
-              invalidArgs: args.username,
-              error
-            }
-          })
+      return user.save().catch((error) => {
+        throw new GraphQLError(`Creating the user failed: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.username,
+            error,
+          },
         })
+      })
     },
     login: async (root, args) => {
       const user = await User.findOne({ username: args.username })
 
-      if ( !user || args.password !== 'secret' ) {
+      if (!user || args.password !== 'secret') {
         throw new GraphQLError('wrong credentials', {
           extensions: {
-            code: 'BAD_USER_INPUT'
-          }
-        })        
+            code: 'BAD_USER_INPUT',
+          },
+        })
       }
 
       const userForToken = {
@@ -129,16 +149,6 @@ const resolvers = {
           .includes(person._id.toString())
 
       const person = await Person.findOne({ name: args.name })
-
-      if (!person) {
-        throw new GraphQLError("The name didn't found", {
-          extensions: {
-            code: 'BAD_USER_INPUT',
-            invalidArgs: args.name,
-          },
-        })
-      }
-
       if (nonFriendAlready(person)) {
         currentUser.friends = currentUser.friends.concat(person)
       }
@@ -146,6 +156,11 @@ const resolvers = {
       await currentUser.save()
 
       return currentUser
+    },
+  },
+  Subscription: {
+    personAdded: {
+      subscribe: () => pubsub.asyncIterableIterator('PERSON_ADDED'),
     },
   },
 }

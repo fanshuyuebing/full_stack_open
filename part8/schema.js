@@ -1,14 +1,4 @@
 const typeDefs = /* GraphQL */ `
-  type User {
-    username: String!
-    friends: [Person!]!
-    id: ID!
-  }
-
-  type Token {
-    value: String!
-  }
-
   type Address {
     street: String!
     city: String!
@@ -18,7 +8,18 @@ const typeDefs = /* GraphQL */ `
     name: String!
     phone: String
     address: Address!
+    friendOf: [User!]!
     id: ID!
+  }
+
+  type User {
+    username: String!
+    friends: [Person!]!
+    id: ID!
+  }
+
+  type Token {
+    value: String!
   }
 
   enum YesNo {
@@ -42,8 +43,12 @@ const typeDefs = /* GraphQL */ `
     ): Person
     editNumber(name: String!, phone: String!): Person
     createUser(username: String!): User
-    login(username:String!, password: String!): Token
+    login(username: String!, password: String!): Token
     addAsFriend(name: String!): User
+  }
+
+  type Subscription {
+    personAdded: Person!
   }
 `
 

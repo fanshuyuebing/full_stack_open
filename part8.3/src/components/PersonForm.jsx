@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { gql } from '@apollo/client'
 import { useMutation } from '@apollo/client/react'
 import { CREATE_PERSON, ALL_PERSONS } from '../queries'
+import { addPersonToCache } from '../utils/apolloCache'
 
 
 const PersonForm = ({ setError }) => {
@@ -10,14 +11,11 @@ const PersonForm = ({ setError }) => {
   const [street, setStreet] = useState('')
   const [city, setCity] = useState('')
 
-  const [ createPerson ] = useMutation(CREATE_PERSON, {
+  const [createPerson] = useMutation(CREATE_PERSON, {
     onError: (error) => setError(error.message),
     update: (cache, response) => {
-      cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
-        return {
-          allPersons: allPersons.concat(response.data.addPerson),
-        }
-      })
+      const addedPerson = response.data.addPerson
+      addPersonToCache(cache, addedPerson)
     },
   })
 
